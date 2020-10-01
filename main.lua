@@ -90,8 +90,8 @@ function love.load()
 
     -- initialize our player paddles; make them global so that they can be
     -- detected by other functions and modules
-    player1 = Paddle(10, 30, 5, 20)
-    player2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20)
+    player1 = Paddle(10, 30, 5, 20, false)
+    player2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20, true)
 
     -- place a ball in the middle of the screen
     ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
@@ -233,21 +233,34 @@ function love.update(dt)
     -- paddles can move no matter what state we're in
     --
     -- player 1
-    if love.keyboard.isDown('w') then
-        player1.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('s') then
-        player1.dy = PADDLE_SPEED
+    if player1.isAI == false then
+        if love.keyboard.isDown('w') then
+            player1.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('s') then
+            player1.dy = PADDLE_SPEED
+        else
+            player1.dy = 0
+        end
     else
-        player1.dy = 0
+        -- use "ai" controls
+        moveDir = player1.y < ball.y and 1 or -1
+        player1.dy = math.max (ball.y + math.abs(player1.y - ball.y), PADDLE_SPEED) * moveDir
     end
 
     -- player 2
-    if love.keyboard.isDown('up') then
-        player2.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('down') then
-        player2.dy = PADDLE_SPEED
+    if player2.isAI == false then
+        -- do player input things
+        if love.keyboard.isDown('up') then
+            player2.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('down') then
+            player2.dy = PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
     else
-        player2.dy = 0
+        -- use "ai" controls
+        moveDir = player2.y < ball.y and 1 or -1
+        player2.dy = math.max (ball.y + math.abs(player2.y - ball.y), PADDLE_SPEED) * moveDir
     end
 
     -- update our ball based on its DX and DY only if we're in play state;
@@ -307,7 +320,7 @@ function love.draw()
     -- begin drawing with push, in our virtual resolution
     push:apply('start')
 
-    love.graphics.clear(40, 45, 52, 255)
+    love.graphics.clear(40 / 255, 45 / 255, 52 / 255, 1)
     
     -- render different things depending on which part of the game we're in
     if gameState == 'start' then
@@ -364,6 +377,6 @@ end
 function displayFPS()
     -- simple FPS display across all states
     love.graphics.setFont(smallFont)
-    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.setColor(0, 1, 0, 1)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
 end
